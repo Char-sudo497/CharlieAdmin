@@ -49,16 +49,17 @@
         <v-card-title class="headline">{{ editingProductID ? 'Edit Product' : 'Add Product' }}</v-card-title>
         <v-card-text>
           <v-form>
-            <v-text-field v-model="productForm.ProductName" label="Product Name" outlined dense required></v-text-field>
+            <v-text-field v-model="productForm.ProductName" label="Product Name" outlined dense required
+              :rules="[validateProductName]" @input="cleanProductName"></v-text-field>
             <v-text-field v-model="productForm.Price" label="Price" type="number" outlined dense
               required></v-text-field>
             <v-select v-model="productForm.CategoryID" :items="categories" item-text="ProductType"
-              item-value="CategoryID" label="Select Category" outlined dense required></v-select>
+              item-value="CategoryID" label="Product Type" outlined dense required></v-select>
             <v-textarea v-model="productForm.ProductDescription" label="Product Description" outlined dense
               required></v-textarea>
             <v-file-input v-model="imageFile" label="Upload Image" outlined dense accept="image/*"
               @change="onImageUpload"></v-file-input>
-            <v-text-field v-model="imageUrl" label="Image URL (optional)" outlined dense></v-text-field>
+            <!-- <v-text-field v-model="imageUrl" label="Image URL (optional)" outlined dense></v-text-field> -->
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -178,6 +179,19 @@ export default {
     this.loadLogs(); // Load logs from localStorage
   },
   methods: {
+    cleanProductName() {
+      this.productForm.ProductName = this.productForm.ProductName.replace(/[^a-zA-Z\s]/g, '');
+    },
+    validateProductName(value) {
+      if (!value) {
+        return 'Product Name is required.';
+      }
+      const regex = /^[a-zA-Z\s]+$/;
+      if (!regex.test(value)) {
+        return 'Product Name must only contain letters and spaces.';
+      }
+      return true;
+    },
     addLog(action, details) {
       const logEntry = {
         timestamp: Date.now(),
@@ -283,25 +297,21 @@ export default {
     editProduct(item) {
       this.editingProductID = item.ProductID; // Set the product ID
       this.productForm = { ...item }; // Populate form with the product's data
+      this.productForm.CategoryID = this.categories.find(category => category.ProductType === item.ProductType)?.CategoryID || '';
+      this.imageUrl = item.Image; // Populate the image URL field
       this.editDialog = true; // Open the dialog
     },
-    onImageUpload(event) {
-      console.log(event); // Log the event object to see its structure
+    onImageUpload() {
+      if (this.imageFile) {
+        const file = this.imageFile; // Directly access the selected file
 
-      if (event && event.target && event.target.files) {
-        const file = event.target.files[0]; // Access the files array from event.target
-
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            this.imageUrl = e.target.result; // Set the image URL to the base64 string
-          };
-          reader.readAsDataURL(file);
-        } else {
-          console.error('No file selected');
-        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.imageUrl = e.target.result; // Set the image URL to the base64 string
+        };
+        reader.readAsDataURL(file);
       } else {
-        console.error('File input event structure is invalid');
+        console.error('No file selected');
       }
     },
     onUrlInput() {
