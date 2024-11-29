@@ -61,6 +61,7 @@ export default {
         { icon: 'mdi-folder', title: 'Category Management', to: '/admin/categorymanagement' },
         { icon: 'mdi-warehouse', title: 'Inventory Management', to: '/admin/inventorymanagement' },
         { icon: 'mdi-credit-card', title: 'Payment Methods', to: '/admin/payments' },
+        { icon: 'mdi-star', title: 'Ratings', to: '/admin/ratings' },
         { icon: 'mdi-qrcode', title: 'Qr Code', to: '/admin/qrscanner' }
       ],
       showDrawerOnRoutes: [
@@ -71,7 +72,8 @@ export default {
         '/admin/categorymanagement',
         '/admin/inventorymanagement',
         '/admin/ordermanagement',
-        '/admin/payments',       
+        '/admin/payments',   
+        '/admin/ratings',    
         '/admin/qrscanner'
       ]
     };
