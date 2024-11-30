@@ -179,7 +179,7 @@ export default {
             businessOwners: [],
             cashiers: [],
             admins: [],
-            roles: ['admin', 'business owner', 'customer', 'cashier'],
+            roles: ['admin', 'Business Owner', 'customer', 'cashier'],
             deleteDialog: false,
             editingUserID: null,
             userForm: {
@@ -272,7 +272,6 @@ export default {
                     firstName: this.userForm.firstName,
                     lastName: this.userForm.lastName,
                     email: this.userForm.email,
-                    password: this.userForm.password,
                     role: this.userForm.role,
                     userID: this.editingUserID // Ensure userID is saved in the document
                 });
@@ -309,7 +308,7 @@ export default {
         // Fetch business owners, cashiers, and admins in similar fashion as users
         async fetchBusinessOwners() {
             try {
-                const q = query(collection(firestore, 'Users'), where('role', '==', 'business owner'));
+                const q = query(collection(firestore, 'Users'), where('role', '==', 'Business Owner'));
                 const usersSnapshot = await getDocs(q);
                 this.businessOwners = usersSnapshot.docs.map(doc => ({
                     uid: doc.id,

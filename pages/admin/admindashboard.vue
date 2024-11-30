@@ -55,7 +55,7 @@
             <v-icon class="mr-2" color="teal" large>mdi-cash</v-icon>
             Total Income
           </v-card-title>
-          <v-card-text class="text-h2">{{ totalIncome | currency }}</v-card-text>
+          <v-card-text class="text-h2">₱ {{ totalIncome }}</v-card-text>
         </v-card>
       </v-col>
 
@@ -65,7 +65,7 @@
             <v-icon class="mr-2" color="purple" large>mdi-currency-usd</v-icon>
             Total Sales
           </v-card-title>
-          <v-card-text class="text-h2">{{ totalSales }}</v-card-text>
+          <v-card-text class="text-h2">₱ {{ totalSales }}</v-card-text>
         </v-card>
       </v-col>
     </v-row>
@@ -93,7 +93,7 @@
 </template>
 
 <script>
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { firestore } from '~/plugins/firebase';
 
 export default {
@@ -117,53 +117,68 @@ export default {
     this.loadLowStockItems();
   },
   methods: {
-    async loadTotalProducts() {
-      const snapshot = await getDocs(collection(firestore, 'Products'));
-      this.totalProducts = snapshot.size;
-    },
-    async loadTotalOrders() {
-      try {
-        // Query orders excluding 'Cancelled' status
-        const ordersRef = collection(firestore, 'Orders');
-        const ordersQuery = query(ordersRef, where('status', '!=', 'Cancelled'));
-        const snapshot = await getDocs(ordersQuery);
-
-        // Count the number of orders that are not cancelled
-        this.totalOrders = snapshot.size;
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      }
-    },
-    async loadTotalSales() {
-      const snapshot = await getDocs(collection(firestore, 'Sales'));
-      this.totalSales = snapshot.size;
-    },
-    async loadTotalIncome() {
-      const snapshot = await getDocs(collection(firestore, 'Sales'));
-      let income = 0;
-      snapshot.forEach(doc => {
-        income += doc.data().amount;
+    loadTotalProducts() {
+      const productsRef = collection(firestore, 'Products');
+      this.unsubscribeProducts = onSnapshot(productsRef, (snapshot) => {
+        this.totalProducts = snapshot.size;
       });
-      this.totalIncome = income;
     },
-    async loadTotalUsers() {
-      const snapshot = await getDocs(collection(firestore, 'Users'));
-      this.totalUsers = snapshot.size;
+    loadTotalOrders() {
+      const ordersRef = collection(firestore, 'Orders');
+      const ordersQuery = query(ordersRef, where('status', '!=', 'Cancelled'));
+      this.unsubscribeOrders = onSnapshot(ordersQuery, (snapshot) => {
+        this.totalOrders = snapshot.size;
+      });
     },
-    async loadLowStockItems() {
-      try {
-        const inventoryRef = collection(firestore, 'Inventory');
-        const lowStockQuery = query(inventoryRef, where('Quantity', '<=', 50)); // Adjust the threshold as needed
-        const snapshot = await getDocs(lowStockQuery);
-
-        this.lowStockItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        this.lowStockCount = this.lowStockItems.length; // Update the low stock count
-
-        console.log("Low stock items:", this.lowStockItems);
-      } catch (error) {
-        console.error("Error fetching low stock items:", error);
-      }
+    loadTotalSales() {
+      const ordersRef = collection(firestore, 'Orders');
+      this.unsubscribeSales = onSnapshot(ordersRef, (snapshot) => {
+        let totalSalesAmount = 0;
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.total) {
+            totalSalesAmount += data.total;
+          }
+        });
+        this.totalSales = totalSalesAmount;
+      });
     },
+    loadTotalIncome() {
+      const ordersRef = collection(firestore, 'Orders');
+      this.unsubscribeIncome = onSnapshot(ordersRef, (snapshot) => {
+        let income = 0;
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.tax) {
+            income += data.tax;
+          }
+        });
+        this.totalIncome = income;
+      });
+    },
+    loadTotalUsers() {
+      const usersRef = collection(firestore, 'Users');
+      this.unsubscribeUsers = onSnapshot(usersRef, (snapshot) => {
+        this.totalUsers = snapshot.size;
+      });
+    },
+    loadLowStockItems() {
+      const inventoryRef = collection(firestore, 'Inventory');
+      const lowStockQuery = query(inventoryRef, where('Quantity', '<=', 50));
+      this.unsubscribeLowStock = onSnapshot(lowStockQuery, (snapshot) => {
+        this.lowStockItems = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        this.lowStockCount = this.lowStockItems.length;
+      });
+    },
+    beforeDestroy() {
+      if (this.unsubscribeProducts) this.unsubscribeProducts();
+      if (this.unsubscribeOrders) this.unsubscribeOrders();
+      if (this.unsubscribeSales) this.unsubscribeSales();
+      if (this.unsubscribeIncome) this.unsubscribeIncome();
+      if (this.unsubscribeUsers) this.unsubscribeUsers();
+      if (this.unsubscribeLowStock) this.unsubscribeLowStock();
+    }
+    ,
   },
   filters: {
     currency(value) {
