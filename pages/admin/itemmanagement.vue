@@ -70,6 +70,18 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog v-model="deleteDialog" max-width="400">
+      <v-card>
+        <v-card-title class="headline">Confirm Deletion</v-card-title>
+        <v-card-text>Are you sure you want to delete this product?</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="deleteProduct(productToDelete)" color="red">Delete</v-btn>
+          <v-btn @click="deleteDialog = false" color="secondary">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Product Details Dialog -->
     <v-dialog v-model="detailsDialog" max-width="500">
       <v-card>
@@ -117,7 +129,7 @@
 </template>
 
 <script>
-import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, onSnapshot } from 'firebase/firestore';
 import { firestore } from '~/plugins/firebase';
 
 export default {
@@ -219,20 +231,22 @@ export default {
       }));
     },
     async loadProducts() {
-      const snapshot = await getDocs(collection(firestore, 'Products'));
-      this.products = snapshot.docs.map(doc => {
-        const data = doc.data();
-        const category = this.categories.find(cat => cat.CategoryID === data.CategoryID);
-        return {
-          ProductID: doc.id,
-          ProductName: data.ProductName,
-          ProductType: category ? category.ProductType : 'Unknown',
-          Price: data.Price,
-          ProductDescription: data.ProductDescription,
-          Image: data.Image
-        };
+      const productsRef = collection(firestore, 'Products');
+      onSnapshot(productsRef, (snapshot) => {
+        this.products = snapshot.docs.map(doc => {
+          const data = doc.data();
+          const category = this.categories.find(cat => cat.CategoryID === data.CategoryID);
+          return {
+            ProductID: doc.id,
+            ProductName: data.ProductName,
+            ProductType: category ? category.ProductType : 'Unknown',
+            Price: data.Price,
+            ProductDescription: data.ProductDescription,
+            Image: data.Image,
+          };
+        });
+        this.totalProducts = this.products.length; // Update total products count
       });
-      this.totalProducts = this.products.length; // Update total products count
     },
     resetProductForm() {
       this.productForm = {
