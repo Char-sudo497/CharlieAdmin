@@ -41,40 +41,26 @@
       </v-col>
     </v-row>
 
-      <!-- Add Dialog -->
+    <!-- Add Dialog -->
     <v-dialog v-model="addDialog" max-width="500">
       <v-card>
         <v-card-title>
           <span class="headline">{{ dialogTitle }}</span>
         </v-card-title>
-        
+
         <v-card-text>
-          <v-form ref="addForm" @submit.prevent="handleAdd">
+          <v-form ref="addForm" @submit.prevent="submitCategory">
             <v-text-field v-model="searchQuery" label="Search Product Types" outlined dense clearable
               append-icon="mdi-magnify"></v-text-field>
-            <!-- Category ID -->
-            <v-text-field
-              v-model="categoryForm.CategoryID"
-              label="Category ID"
-              outlined
-              dense
-              required
-              readonly
-            ></v-text-field>
-
-            <!-- Product Type -->
-            <v-text-field
-              v-model="categoryForm.ProductType"
-              label="Product Type"
-              outlined
-              dense
-              required
-            ></v-text-field>
+            <v-text-field v-model="categoryForm.CategoryID" label="Category ID" outlined dense required
+              readonly></v-text-field>
+            <v-text-field v-model="categoryForm.ProductType" label="Product Type" outlined dense
+              required></v-text-field>
           </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="handleAdd">Save</v-btn>
+          <v-btn color="blue darken-1" text @click="submitCategory">{{ categorySubmitButtonText }}</v-btn>
           <v-btn color="grey darken-1" text @click="addDialog = false">Cancel</v-btn>
         </v-card-actions>
       </v-card>
@@ -134,6 +120,7 @@ export default {
       categoryToDelete: null,
       searchQuery: '', // Add search query property
       totalCategories: 0, // New property for total categories
+      dialogTitle: '' // Add dialogTitle with an empty default value
     };
   },
   computed: {
@@ -225,18 +212,23 @@ export default {
         return;
       }
 
+      // Check if the category already exists by CategoryID
       const existingCategory = this.categories.find(cat => cat.CategoryID === CategoryID);
       if (existingCategory) {
+        // If the category exists, update it
         const categoryRef = doc(firestore, 'Categories', existingCategory.id);
         await updateDoc(categoryRef, { ProductType });
-        existingCategory.ProductType = ProductType;
+        existingCategory.ProductType = ProductType; // Update the local list
         this.addLog('Edit', `Category ID: ${CategoryID}, Updated Product Type to: ${ProductType}`);
       } else {
+        // If the category does not exist, create a new one
         const docRef = await addDoc(collection(firestore, 'Categories'), { CategoryID, ProductType });
         this.categories.push({ id: docRef.id, CategoryID, ProductType });
         this.addLog('Add', `Category ID: ${CategoryID}, Product Type: ${ProductType}`);
       }
-      this.resetCategoryForm();
+
+      this.addDialog = false; // Close the dialog after submission
+      this.resetCategoryForm(); // Reset the form
     },
     confirmDeleteCategory(id) {
       this.categoryToDelete = id;
@@ -252,8 +244,10 @@ export default {
       this.deleteDialog = false;
     },
     editCategory(item) {
-      this.categoryForm = { ...item };
-      this.categorySubmitButtonText = 'Update Category';
+      this.categoryForm = { ...item };  // Pre-fill the form with the selected category data
+      this.categorySubmitButtonText = 'Update Category'; // Change the button text to 'Update Category'
+      this.dialogTitle = 'Edit Category'; // Update the dialog title
+      this.addDialog = true; // Open the dialog for editing
     },
     resetCategoryForm() {
       this.categoryForm = {

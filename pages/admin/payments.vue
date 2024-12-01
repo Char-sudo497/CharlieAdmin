@@ -42,27 +42,22 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-      
+
       <!-- Logs Table -->
-  <v-col cols="12" class="mt-4">
-    <v-card class="elevation-2">
-      <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2">mdi-history</v-icon>
-        Logs
-      </v-card-title>
-      <v-data-table
-        :headers="logHeaders"
-        :items="logs"
-        item-key="id"
-        class="elevation-1"
-        :header-class="{ 'text-align-center': true }"
-      >
-        <template v-slot:item.timestamp="{ item }">
-          {{ formatDate(item.timestamp) }}
-        </template>
-      </v-data-table>
-    </v-card>
-  </v-col>
+      <v-col cols="12" class="mt-4">
+        <v-card class="elevation-2">
+          <v-card-title class="d-flex align-center">
+            <v-icon class="mr-2">mdi-history</v-icon>
+            Logs
+          </v-card-title>
+          <v-data-table :headers="logHeaders" :items="logs" item-key="id" class="elevation-1"
+            :header-class="{ 'text-align-center': true }">
+            <template v-slot:item.timestamp="{ item }">
+              {{ formatDate(item.timestamp) }}
+            </template>
+          </v-data-table>
+        </v-card>
+      </v-col>
     </v-row>
 
     <!-- Add Item Dialog -->
@@ -100,11 +95,11 @@ export default {
         { text: 'Actions', value: 'actions', sortable: false }
       ],
       logHeaders: [
-      { text: 'Action', value: 'action' },
-      { text: 'Payment Method', value: 'method' },
-      { text: 'Description', value: 'description' },
-      { text: 'Timestamp', value: 'timestamp' }
-    ],
+        { text: 'Action', value: 'action' },
+        { text: 'Payment Method', value: 'method' },
+        { text: 'Description', value: 'description' },
+        { text: 'Timestamp', value: 'timestamp' }
+      ],
       paymentMethod: { method: '', description: '' },
       selectedPayment: null,
       deleteDialog: false,
@@ -127,43 +122,36 @@ export default {
       const user = getAuth().currentUser;
       return user ? user.uid : null;
     },
-    loadLogs() {
-    const userId = this.getUserId();
-    const logsCollection = collection(firestore, 'Logs');
-    onSnapshot(logsCollection, (snapshot) => {
-      this.logs = snapshot.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((log) => log.userID === userId);
-    });
-  },
-  // Format timestamps for display
-  formatDate(timestamp) {
-    if (timestamp && timestamp.toDate) {
-      const date = timestamp.toDate();
-      return date.toLocaleString();
-    }
-    return '';
-  },
-  async logAction(action, payment) {
-    const userId = this.getUserId();
-    const logEntry = {
-      action, // 'Add', 'Edit', or 'Delete'
-      method: payment.method,
-      description: payment.description || '',
-      timestamp: new Date(),
-      userID: userId
-    };
-    await addDoc(collection(firestore, 'Logs'), logEntry);
-  },
+    async loadLogs() {
+      const logsCollection = collection(firestore, 'Logs');
+      onSnapshot(logsCollection, (snapshot) => {
+        this.logs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      });
+    },
+    // Format timestamps for display
+    formatDate(timestamp) {
+      if (timestamp && timestamp.toDate) {
+        const date = timestamp.toDate();
+        return date.toLocaleString();
+      }
+      return '';
+    },
+    async logAction(action, payment) {
+      const userId = this.getUserId();
+      const logEntry = {
+        action, // 'Add', 'Edit', or 'Delete'
+        method: payment.method,
+        description: payment.description || '',
+        timestamp: new Date(),
+        userID: userId
+      };
+      await addDoc(collection(firestore, 'Logs'), logEntry);
+    },
     // Load payments from Firebase
     async loadPayments() {
-      const userId = this.getUserId();
       const querySnapshot = await getDocs(collection(firestore, 'Payments'));
-      this.payments = querySnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(payment => payment.userID === userId);
+      this.payments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     },
-
     // Set selected payment for editing
     setSelectedPayment(payment) {
       this.selectedPayment = payment;
@@ -189,28 +177,25 @@ export default {
 
     // Add a new payment to Firebase
     async addPayment() {
-    const userId = this.getUserId();
-    const newPayment = {
-      method: this.paymentMethod.method,
-      description: this.paymentMethod.description || '',
-      createdAt: new Date(),
-      userID: userId
-    };
-    const docRef = await addDoc(collection(firestore, 'Payments'), newPayment);
-    this.logAction('Add', { ...newPayment, id: docRef.id });
-  },
-
+      const newPayment = {
+        method: this.paymentMethod.method,
+        description: this.paymentMethod.description || '',
+        createdAt: new Date(),  // No userID field here
+      };
+      const docRef = await addDoc(collection(firestore, 'Payments'), newPayment);
+      this.logAction('Add', { ...newPayment, id: docRef.id });
+    },
     // Add log when editing a payment
-  async updatePayment(paymentId) {
-    const userId = this.getUserId();
-    const paymentRef = doc(firestore, 'Payments', paymentId);
-    const updatedPayment = {
-      method: this.paymentMethod.method,
-      description: this.paymentMethod.description || ''
-    };
-    await updateDoc(paymentRef, updatedPayment);
-    this.logAction('Edit', { id: paymentId, ...updatedPayment });
-  },
+    async updatePayment(paymentId) {
+      const userId = this.getUserId();
+      const paymentRef = doc(firestore, 'Payments', paymentId);
+      const updatedPayment = {
+        method: this.paymentMethod.method,
+        description: this.paymentMethod.description || ''
+      };
+      await updateDoc(paymentRef, updatedPayment);
+      this.logAction('Edit', { id: paymentId, ...updatedPayment });
+    },
 
     // Prompt delete confirmation
     confirmDeletePayment(paymentId) {
@@ -219,16 +204,16 @@ export default {
     },
 
     // Add log when deleting a payment
-  async deletePayment() {
-    if (this.paymentToDelete) {
-      const payment = this.payments.find((p) => p.id === this.paymentToDelete);
-      await deleteDoc(doc(firestore, 'Payments', this.paymentToDelete));
-      this.logAction('Delete', payment);
-      this.payments = this.payments.filter((p) => p.id !== this.paymentToDelete);
-      this.paymentToDelete = null;
-    }
-    this.deleteDialog = false;
-  },
+    async deletePayment() {
+      if (this.paymentToDelete) {
+        const payment = this.payments.find((p) => p.id === this.paymentToDelete);
+        await deleteDoc(doc(firestore, 'Payments', this.paymentToDelete));
+        this.logAction('Delete', payment);
+        this.payments = this.payments.filter((p) => p.id !== this.paymentToDelete);
+        this.paymentToDelete = null;
+      }
+      this.deleteDialog = false;
+    },
 
     // Open the dialog for adding data
     openDialog(type) {
@@ -245,17 +230,15 @@ export default {
 
     // Save new data from the dialog
     async saveDialogData() {
-      const userId = this.getUserId();
       if (this.dialog.type === 'Payment') {
         await addDoc(collection(firestore, 'Payments'), {
           ...this.dialog.data,
-          createdAt: new Date(),
-          userID: userId
+          createdAt: new Date(),  // No userID field here
         });
         this.loadPayments();
       }
       this.closeDialog();
-    }
+    },
   }
 };
 </script>

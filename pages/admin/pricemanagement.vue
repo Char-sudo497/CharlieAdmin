@@ -16,9 +16,9 @@
           <v-data-table :headers="priceHeaders" :items="filteredPriceHistory" item-key="id" class="elevation-1"
             :header-class="{ 'text-align-center': true }">
             <template v-slot:item.actions="{ item }">
-              <v-btn icon @click="editPriceHistory(item)" aria-label="Edit Price History" text>
+              <!-- <v-btn icon @click="editPriceHistory(item)" aria-label="Edit Price History" text>
                 <v-icon color="blue">mdi-pencil</v-icon>
-              </v-btn>
+              </v-btn> -->
 
               <!-- Delete Button -->
               <v-btn icon @click="confirmDeletePrice(item)" aria-label="Delete Price History" text>
@@ -39,6 +39,10 @@
             <v-autocomplete v-model="priceForm.ProductID" :items="products" item-text="name" item-value="id"
               label="Product" outlined dense required @change="onProductChange" />
 
+            <!-- Old Price field populated with the current product price -->
+            <v-text-field v-model="priceForm.OldPrice" label="Old Price" outlined dense type="number" readonly />
+
+            <!-- New Price field remains empty for the user to input a new price -->
             <v-text-field v-model="priceForm.NewPrice" label="New Price" outlined dense type="number" required />
 
             <v-textarea v-model="priceForm.ChangedBy" label="Changed By" outlined dense required />
@@ -184,7 +188,9 @@ export default {
       const productSnap = await getDoc(productRef);
 
       if (productSnap.exists()) {
-        this.priceForm.NewPrice = productSnap.data().Price || ""; // Set the current price of the selected product
+        // Set both OldPrice and NewPrice based on the selected product
+        this.priceForm.OldPrice = productSnap.data().Price || 0; // Set current price as Old Price
+        this.priceForm.NewPrice = ""; // Leave New Price empty
       } else {
         console.error("Product not found");
       }
