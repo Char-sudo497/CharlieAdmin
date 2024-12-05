@@ -1,38 +1,42 @@
 <template>
   <v-container class="pa-5">
-    <!-- QR Code Scanner Section -->
+    <!-- QR Code Scanner Section
     <v-card class="elevation-10">
       <v-card-title class="headline text-center">
         QR Code Scanner
       </v-card-title>
 
       <v-card-text class="text-center">
-        <!-- Scanned Data Textarea -->
+        
         <v-textarea label="Scanned Data" v-model="scannedData" outlined rows="5" readonly
           class="scanned-data-textarea"></v-textarea>
 
-        <!-- Reset Button -->
+        
         <v-btn color="primary" class="mt-3 reset-btn" @click="resetForm" fab small>
           <v-icon>mdi-refresh</v-icon>
         </v-btn>
 
-        <!-- Error Alert -->
+        
         <v-alert v-if="invalidOrder" type="error" class="mt-3" prominent>
           Invalid or Expired QR Code
         </v-alert>
       </v-card-text>
-    </v-card>
+    </v-card> -->
 
     <!-- Order Details Section -->
     <v-card class="elevation-10 mt-5">
       <v-card-title class="headline text-center">
-        Order Details
+        Order ID Details
       </v-card-title>
 
       <v-card-text>
         <!-- Input Field for UID -->
         <v-text-field label="Enter Order UID" v-model="orderUID" outlined dense
           @change="fetchOrderDetails"></v-text-field>
+          <!-- Reset Button -->
+        <v-btn color="primary" class="mt-3 reset-btn" @click="resetForm" fab small>
+          <v-icon>mdi-refresh</v-icon>
+        </v-btn>
 
         <!-- Cart Items Section -->
         <v-card class="mt-5" v-if="orderDetails && orderDetails.cartItems && orderDetails.cartItems.length > 0">
