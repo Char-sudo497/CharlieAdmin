@@ -13,6 +13,8 @@
     "firebase": "^11.0.1",
     "nuxt": "^2.15.8",
     "vue": "^2.7.10",
+    "vue-qr-reader": "^1.6.2",
+    "vue-qrcode-reader": "^5.5.11",
     "vue-server-renderer": "^2.7.10",
     "vue-template-compiler": "^2.7.10",
     "vuetify": "^2.6.10"
