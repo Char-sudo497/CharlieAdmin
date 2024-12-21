@@ -11,7 +11,7 @@
         <v-card class="elevation-2 statistics-card">
           <v-card-title class="headline">
             <v-icon class="mr-2" color="red" large>mdi-account-multiple</v-icon>
-            Total Users people
+            Total Users asdasda
           </v-card-title>
           <v-card-text class="text-h2">{{ totalUsers }}</v-card-text>
         </v-card>
